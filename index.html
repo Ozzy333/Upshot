@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Upshot Optimizer</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#07080C;--bg2:#0C0E15;--bg3:#11141E;--bg4:#181C28;
+  --text:#E2E6F0;--dim:#5A6278;--dim2:#8A93A8;
+  --green:#34D399;--blue:#60A5FA;--amber:#F59E0B;--pink:#F472B6;--violet:#A78BFA;
+}
+html{font-size:16px}
+body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 60% 40% at 0% 0%,rgba(52,211,153,.06) 0%,transparent 60%),
+             radial-gradient(ellipse 40% 30% at 100% 100%,rgba(96,165,250,.05) 0%,transparent 60%)}
+.shell{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:0 18px 80px}
+
+/* HEADER */
+header{display:flex;align-items:center;justify-content:space-between;padding:24px 0 32px}
+.logo-main{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:22px;letter-spacing:3px;text-transform:uppercase}
+.logo-main span{color:var(--green)}
+.logo-sub{font-size:10px;color:var(--dim2);letter-spacing:3px;text-transform:uppercase;margin-top:2px}
+.status-pill{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--green);background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);padding:5px 12px;border-radius:100px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* STEPS */
+.steps{display:flex;align-items:center;margin-bottom:32px}
+.step{display:flex;flex-direction:column;align-items:center;gap:5px}
+.step-num{width:32px;height:32px;border-radius:50%;border:1.5px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:var(--dim);transition:all .3s}
+.step.done .step-num{background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.5);color:var(--green)}
+.step.active .step-num{background:rgba(96,165,250,.1);border-color:rgba(96,165,250,.5);color:var(--blue)}
+.step-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--dim);white-space:nowrap;transition:all .3s}
+.step.done .step-lbl{color:var(--green)}
+.step.active .step-lbl{color:var(--blue)}
+.step-line{flex:1;height:1px;background:rgba(255,255,255,.07);margin:0 6px;margin-bottom:18px}
+
+/* PANEL */
+.panel{background:var(--bg2);border:1px solid rgba(255,255,255,.07);border-radius:16px;overflow:hidden;margin-bottom:20px}
+.panel-head{padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:12px}
+.panel-icon{width:32px;height:32px;border-radius:8px;background:rgba(96,165,250,.1);border:1px solid rgba(96,165,250,.2);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.panel-title{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:15px;letter-spacing:.5px;text-transform:uppercase}
+.panel-desc{font-size:12px;color:var(--dim2);margin-top:1px}
+.panel-body{padding:20px}
+
+/* UPLOAD */
+.upload-zone{border:1.5px dashed rgba(96,165,250,.25);border-radius:14px;padding:32px 20px;text-align:center;cursor:pointer;background:rgba(96,165,250,.02);transition:all .2s;position:relative}
+.upload-zone:hover,.upload-zone.drag{border-color:rgba(96,165,250,.5);background:rgba(96,165,250,.04)}
+.upload-zone.has-img{border-color:rgba(52,211,153,.4);background:rgba(52,211,153,.02)}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-icon{font-size:36px;margin-bottom:10px}
+.upload-h{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:17px;margin-bottom:5px}
+.upload-p{font-size:12px;color:var(--dim2)}
+#previewImg{display:none;max-height:180px;width:100%;object-fit:contain;border-radius:10px;border:1px solid rgba(255,255,255,.08);background:var(--bg3);margin-bottom:14px}
+
+/* SIZE TOGGLE */
+.size-toggle{display:flex;gap:10px;margin-bottom:18px}
+.size-btn{flex:1;padding:12px;border-radius:12px;border:1.5px solid rgba(255,255,255,.1);background:transparent;cursor:pointer;color:var(--dim2);font-family:'Barlow',sans-serif;font-weight:700;transition:all .2s}
+.size-btn.active{border-color:var(--blue);background:rgba(96,165,250,.1);color:var(--blue)}
+.size-btn-num{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:32px;line-height:1;margin-bottom:3px}
+.size-btn-lbl{font-size:10px;text-transform:uppercase;letter-spacing:1px}
+
+/* BUTTONS */
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px;border-radius:12px;border:none;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:17px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.btn-blue{background:var(--blue);color:#07080C}
+.btn-blue:hover{background:#93C5FD;transform:translateY(-1px)}
+.btn-blue:disabled{background:rgba(96,165,250,.3);cursor:not-allowed;transform:none}
+.btn-grad{background:linear-gradient(135deg,#34D399,#60A5FA);color:#07080C;box-shadow:0 6px 24px rgba(52,211,153,.2)}
+.btn-grad:hover{filter:brightness(1.05);transform:translateY(-1px)}
+.btn-grad:disabled{background:rgba(52,211,153,.3);box-shadow:none;cursor:not-allowed;transform:none}
+.btn-ghost{background:transparent;border:1px solid rgba(255,255,255,.1);color:var(--dim2);font-size:13px;letter-spacing:.5px;margin-top:10px}
+.btn-ghost:hover{color:var(--text)}
+.spin{display:inline-block;width:15px;height:15px;border:2px solid rgba(0,0,0,.2);border-top-color:currentColor;border-radius:50%;animation:rot .7s linear infinite;flex-shrink:0}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+/* CARDS */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-bottom:18px}
+.sc-card{background:var(--bg3);border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:14px;position:relative}
+.sc-card.warn{border-color:rgba(245,158,11,.25)}
+.sc-prob{position:absolute;top:10px;right:10px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;padding:2px 6px;border-radius:4px}
+.sc-pred{font-size:13px;font-weight:600;line-height:1.4;margin-bottom:8px;padding-right:36px}
+.sc-tags{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px}
+.tag{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:3px 8px;border-radius:4px;display:inline-block;cursor:default}
+.tag.clickable{cursor:pointer}
+.sc-ctx{font-size:11px;color:var(--dim2);line-height:1.5}
+.prob-bar{height:2px;background:var(--bg4);border-radius:1px;margin-top:8px;overflow:hidden}
+.prob-fill{height:100%;border-radius:1px}
+
+/* LINEUPS */
+.lineups-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-top:4px}
+.lc{border-radius:16px;border:1px solid transparent;overflow:hidden;transition:transform .2s}
+.lc:hover{transform:translateY(-3px)}
+.lc-head{padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;align-items:flex-start}
+.lc-type{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:17px;letter-spacing:1.5px;text-transform:uppercase;line-height:1}
+.lc-tagline{font-size:11px;color:var(--dim2);margin-top:3px}
+.lc-score-val{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;line-height:1;text-align:right}
+.lc-score-lbl{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--dim2);text-align:right}
+.lc-hit{font-size:11px;color:var(--dim2);text-align:right;margin-top:2px;font-family:'JetBrains Mono',monospace}
+.lc-picks{padding:8px 16px}
+.lc-pick{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.lc-pick:last-child{border-bottom:none}
+.pick-num{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);min-width:16px;padding-top:1px}
+.pick-text{font-size:13px;font-weight:500;flex:1;line-height:1.4}
+.pick-out{font-size:10px;font-weight:700;padding:2px 6px;border-radius:3px;white-space:nowrap;align-self:flex-start}
+.lc-foot{padding:10px 16px;border-top:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;align-items:center;gap:10px}
+.lc-reason{font-size:11px;color:var(--dim2);line-height:1.5;flex:1}
+.copy-btn{padding:6px 12px;border-radius:6px;border:1px solid rgba(255,255,255,.1);background:transparent;color:var(--dim2);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:'Barlow',sans-serif;transition:all .15s}
+.copy-btn:hover{color:var(--text)}
+.sec-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2.5px;color:var(--dim2);display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.sec-lbl::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.06)}
+
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);z-index:200;align-items:center;justify-content:center;padding:20px}
+.modal-bg.open{display:flex;animation:fadeUp .2s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.modal{background:var(--bg2);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:24px;width:100%;max-width:400px}
+.modal-title{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;text-transform:uppercase;color:var(--blue);margin-bottom:16px;letter-spacing:1px}
+.field-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--dim2);margin-bottom:4px;display:block}
+.field-lbl+input{width:100%;background:var(--bg3);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;padding:9px 12px;outline:none;margin-bottom:12px;display:block}
+.field-lbl+input:focus{border-color:rgba(96,165,250,.5)}
+.outcome-toggle{display:flex;gap:8px;margin-bottom:14px}
+.out-btn{flex:1;padding:9px;border-radius:8px;border:1.5px solid rgba(255,255,255,.1);background:transparent;font-family:'Barlow',sans-serif;font-weight:700;font-size:14px;cursor:pointer;transition:all .15s;color:var(--dim2)}
+.modal-actions{display:flex;gap:10px;margin-top:4px}
+.modal-save{flex:1;padding:11px;background:var(--blue);border:none;border-radius:8px;color:#07080C;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:15px;text-transform:uppercase;cursor:pointer;letter-spacing:1px}
+.modal-cancel{padding:11px 16px;background:transparent;border:1px solid rgba(255,255,255,.1);border-radius:8px;color:var(--dim2);font-family:'Barlow',sans-serif;font-weight:600;font-size:13px;cursor:pointer}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;z-index:999;white-space:nowrap;backdrop-filter:blur(10px);transition:transform .35s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.ok{background:rgba(52,211,153,.15);border:1px solid rgba(52,211,153,.3);color:var(--green)}
+.toast.err{background:rgba(244,114,182,.12);border:1px solid rgba(244,114,182,.25);color:var(--pink)}
+.toast.inf{background:rgba(96,165,250,.12);border:1px solid rgba(96,165,250,.25);color:var(--blue)}
+
+@media(max-width:600px){.lineups-grid{grid-template-columns:1fr}.cards-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <header>
+    <div>
+      <div class="logo-main">UPSHOT <span>OPT</span></div>
+      <div class="logo-sub">AI Lineup Optimizer</div>
+    </div>
+    <div class="status-pill"><div class="dot"></div> AI Ready</div>
+  </header>
+
+  <div class="steps">
+    <div class="step active" id="s1"><div class="step-num">1</div><div class="step-lbl">Screenshot</div></div>
+    <div class="step-line"></div>
+    <div class="step" id="s2"><div class="step-num">2</div><div class="step-lbl">Granska Kort</div></div>
+    <div class="step-line"></div>
+    <div class="step" id="s3"><div class="step-num">3</div><div class="step-lbl">Lineup Förslag</div></div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div id="page1">
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-icon">📱</div>
+        <div>
+          <div class="panel-title">Ta Screenshot i Upshot</div>
+          <div class="panel-desc">Ladda upp bild på dina giltiga kort för tävlingen — AI läser av dem automatiskt</div>
+        </div>
+      </div>
+      <div class="panel-body">
+        <img id="previewImg" alt="">
+        <div class="upload-zone" id="uploadZone">
+          <input type="file" accept="image/*" id="fileInput">
+          <div class="upload-icon" id="uploadIcon">📸</div>
+          <div class="upload-h" id="uploadH">Ladda upp screenshot</div>
+          <div class="upload-p">Dra &amp; släpp eller klicka · PNG, JPG, WEBP</div>
+        </div>
+        <div style="margin-top:20px;margin-bottom:8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--dim2)">Antal kort per lineup</div>
+        <div class="size-toggle">
+          <button class="size-btn active" id="btn3" onclick="setSize(3)">
+            <div class="size-btn-num">3</div><div class="size-btn-lbl">Korts Lineup</div>
+          </button>
+          <button class="size-btn" id="btn5" onclick="setSize(5)">
+            <div class="size-btn-num">5</div><div class="size-btn-lbl">Korts Lineup</div>
+          </button>
+        </div>
+        <button class="btn btn-blue" id="scanBtn" onclick="scanImage()" disabled>🔍 Scanna Kort med AI</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div id="page2" style="display:none">
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-icon">🃏</div>
+        <div>
+          <div class="panel-title">Scannerade Kort</div>
+          <div class="panel-desc" id="reviewDesc">Granska och justera vid behov</div>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="cards-grid" id="cardsGrid"></div>
+        <button class="btn btn-grad" id="genBtn" onclick="generateLineups()">⚡ Generera AI Lineup-förslag</button>
+        <button class="btn btn-ghost" onclick="resetAll()">← Ny screenshot</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div id="page3" style="display:none">
+    <div class="sec-lbl">AI Lineup-förslag</div>
+    <div class="lineups-grid" id="lineupsGrid"></div>
+    <button class="btn btn-ghost" style="margin-top:20px" onclick="resetAll()">← Börja om</button>
+  </div>
+
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-bg" id="editModal">
+  <div class="modal">
+    <div class="modal-title">Redigera Kort</div>
+    <label class="field-lbl">Prediction-text</label>
+    <input type="text" id="ePred">
+    <label class="field-lbl">Sannolikhet (%)</label>
+    <input type="number" id="eProb" min="1" max="99">
+    <label class="field-lbl">Poäng / Multiplier</label>
+    <input type="text" id="ePts">
+    <label class="field-lbl">Kontext</label>
+    <input type="text" id="eCtx">
+    <label class="field-lbl" style="margin-bottom:6px">Outcome</label>
+    <div class="outcome-toggle">
+      <button class="out-btn" id="outYes" onclick="setOutcome('YES')">YES</button>
+      <button class="out-btn" id="outNo"  onclick="setOutcome('NO')">NO</button>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-save" onclick="saveEdit()">Spara</button>
+      <button class="modal-cancel" onclick="closeModal()">Avbryt</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let lineupSize = 3, cards = [], lineups = [], imgB64 = null, editIdx = null, editOutcome = 'YES';
+
+const LINEUP_META = {
+  secure:     {color:'#34D399',bg:'rgba(52,211,153,.07)', border:'rgba(52,211,153,.22)', label:'🛡️ SECURE',      desc:'Säkrast — högst hit-chans'},
+  balanced:   {color:'#60A5FA',bg:'rgba(96,165,250,.07)', border:'rgba(96,165,250,.22)', label:'⚖️ BALANCED',    desc:'Bästa risk/reward-balansen'},
+  highreward: {color:'#F59E0B',bg:'rgba(245,158,11,.07)', border:'rgba(245,158,11,.22)', label:'🚀 HIGH REWARD', desc:'Max utbetalning om de slår'},
+  edge:       {color:'#F472B6',bg:'rgba(244,114,182,.07)',border:'rgba(244,114,182,.22)',label:'🔍 EDGE PLAY',   desc:'Dold value — underskattade odds'},
+  chaos:      {color:'#A78BFA',bg:'rgba(167,139,250,.07)',border:'rgba(167,139,250,.22)',label:'💥 CHAOS',       desc:'Moonshot — allt eller inget'},
+};
+const STATUS = ['Läser av korttexterna…','Beräknar sannolikheter…','Bygger Secure lineup…','Bygger Balanced lineup…','Bygger High Reward…','Bygger Edge Play…','Sätter ihop Chaos lineup…','Optimerar EV-scores…'];
+
+function setStep(n){[1,2,3].forEach(i=>{const e=document.getElementById('s'+i);e.classList.remove('active','done');if(i<n)e.classList.add('done');else if(i===n)e.classList.add('active');})}
+
+// FILE UPLOAD
+const zone=document.getElementById('uploadZone');
+document.getElementById('fileInput').addEventListener('change',e=>handleFile(e.target.files[0]));
+zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('drag')});
+zone.addEventListener('dragleave',()=>zone.classList.remove('drag'));
+zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('drag');handleFile(e.dataTransfer.files[0])});
+
+function handleFile(file){
+  if(!file||!file.type.startsWith('image/'))return;
+  const r=new FileReader();
+  r.onload=e=>{
+    imgB64=e.target.result.split(',')[1];
+    const img=document.getElementById('previewImg');
+    img.src=e.target.result; img.style.display='block';
+    zone.classList.add('has-img');
+    document.getElementById('uploadIcon').textContent='✅';
+    document.getElementById('uploadH').textContent='Bild vald — klicka för att byta';
+    document.getElementById('scanBtn').disabled=false;
+    showToast('Bild laddad ✓','ok');
+  };
+  r.readAsDataURL(file);
+}
+
+function setSize(n){
+  lineupSize=n;
+  document.getElementById('btn3').classList.toggle('active',n===3);
+  document.getElementById('btn5').classList.toggle('active',n===5);
+}
+
+// API — anropar vår säkra mellanhand /api/chat istället för Anthropic direkt
+async function callAPI(messages,maxTokens=2000){
+  const res=await fetch('/api/chat',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:maxTokens,messages})
+  });
+  const data=await res.json();
+  if(data.error)throw new Error(data.error.message||data.error);
+  return(data.content?.[0]?.text||'').replace(/```json|```/g,'').trim();
+}
+
+// SCAN
+async function scanImage(){
+  if(!imgB64)return;
+  const btn=document.getElementById('scanBtn');
+  btn.disabled=true; btn.innerHTML='<div class="spin"></div> Skannar bild med AI…';
+  try{
+    const raw=await callAPI([{role:'user',content:[
+      {type:'image',source:{type:'base64',media_type:'image/jpeg',data:imgB64}},
+      {type:'text',text:`Analyze this Upshot.cards app screenshot. Extract every visible prediction card.
+For each card: "pred" (full text), "outcome" ("YES" or "NO"), "prob" (integer 1-99 hit probability %), "pts" (points/prize or ""), "ctx" (one Swedish sentence reasoning), "confidence" ("high"|"med"|"low").
+Return ONLY valid JSON: {"cards":[...],"note":"Swedish summary"}
+If no cards visible: {"cards":[],"note":"Inga kort hittades"}`}
+    ]}]);
+    const parsed=JSON.parse(raw);
+    cards=(parsed.cards||[]).map((c,i)=>({id:i,...c,prob:parseInt(c.prob)||60}));
+    if(cards.length===0){showToast('Inga kort hittades — prova tydligare bild','err');}
+    else{
+      showToast(`${cards.length} kort scannerade ✓`,'ok');
+      document.getElementById('reviewDesc').textContent=parsed.note||`${cards.length} kort hittade`;
+      renderCards();
+      document.getElementById('page1').style.display='none';
+      document.getElementById('page2').style.display='block';
+      setStep(2);
+    }
+  }catch(e){showToast('Skanning misslyckades — försök igen','err');console.error(e);}
+  btn.disabled=false; btn.innerHTML='🔍 Scanna Kort med AI';
+}
+
+// RENDER CARDS
+function probColor(p){return p>=65?'#34D399':p>=45?'#F59E0B':'#F472B6'}
+function renderCards(){
+  document.getElementById('cardsGrid').innerHTML=cards.map((c,i)=>{
+    const pc=probColor(c.prob);
+    return`<div class="sc-card ${c.confidence==='low'?'warn':''}">
+      <div class="sc-prob" style="background:${pc}20;color:${pc}">${c.prob}%</div>
+      <div class="sc-pred">${c.pred}</div>
+      <div class="sc-tags">
+        <span class="tag" style="background:${c.outcome==='YES'?'rgba(52,211,153,.12)':'rgba(244,114,182,.12)'};color:${c.outcome==='YES'?'#34D399':'#F472B6'}">${c.outcome}</span>
+        ${c.pts?`<span class="tag" style="background:rgba(245,158,11,.12);color:#F59E0B">💰 ${c.pts}</span>`:''}
+        <span class="tag" style="background:rgba(96,165,250,.12);color:#60A5FA">~${c.prob}%</span>
+        <span class="tag clickable" style="background:rgba(255,255,255,.06);color:#8A93A8" onclick="openEdit(${i})">✏️ Redigera</span>
+      </div>
+      ${c.ctx?`<div class="sc-ctx">${c.ctx}</div>`:''}
+      <div class="prob-bar"><div class="prob-fill" style="width:${c.prob}%;background:${pc}"></div></div>
+    </div>`;
+  }).join('');
+}
+
+// GENERATE
+async function generateLineups(){
+  if(cards.length<lineupSize){showToast(`Behöver minst ${lineupSize} kort`,'err');return;}
+  const btn=document.getElementById('genBtn');
+  btn.disabled=true;
+  let si=0; btn.innerHTML=`<div class="spin"></div> ${STATUS[0]}`;
+  const iv=setInterval(()=>{si++;if(si<STATUS.length)btn.innerHTML=`<div class="spin"></div> ${STATUS[si]}`;},600);
+  const summary=cards.map((c,i)=>`CARD ${i}: "${c.pred}" | ${c.outcome} | prob:${c.prob}% | pts:${c.pts||'?'} | ${c.ctx||''}`).join('\n');
+  try{
+    const raw=await callAPI([{role:'user',content:
+      `You are an Upshot.cards lineup optimizer. Build exactly 5 lineups of exactly ${lineupSize} cards each.
+AVAILABLE CARDS (${cards.length} total):
+${summary}
+For each lineup: "type" (secure/balanced/highreward/edge/chaos), "tagline" (short Swedish, max 6 words), "card_indices" (array of exactly ${lineupSize} zero-based indices), "ev_score" (0-100 expected value), "hit_prob" (0-100 all picks hit %), "reasoning" (1-2 sentences Swedish).
+Strategies: secure=safest/highest hit prob, balanced=best risk/reward, highreward=max payout, edge=hidden value picks, chaos=moonshot.
+Return ONLY valid JSON: {"lineups":[{"type":"secure","tagline":"...","card_indices":[...],"ev_score":0,"hit_prob":0,"reasoning":"..."},...5 total]}`
+    }]);
+    const parsed=JSON.parse(raw);
+    lineups=parsed.lineups||[];
+    if(lineups.length){
+      renderLineups();
+      document.getElementById('page3').style.display='block';
+      setStep(3);
+      showToast(`${lineups.length} lineups klara! 🔥`,'ok');
+      setTimeout(()=>document.getElementById('page3').scrollIntoView({behavior:'smooth',block:'start'}),100);
+    }else{showToast('Inga lineups genererades — försök igen','err');}
+  }catch(e){showToast('Generering misslyckades — försök igen','err');console.error(e);}
+  clearInterval(iv); btn.disabled=false; btn.innerHTML='⚡ Generera igen';
+}
+
+// RENDER LINEUPS
+function renderLineups(){
+  document.getElementById('lineupsGrid').innerHTML=lineups.map((lu,li)=>{
+    const meta=LINEUP_META[lu.type]||LINEUP_META.balanced;
+    const picks=(lu.card_indices||[]).map(i=>cards[i]).filter(Boolean);
+    return`<div class="lc" style="border-color:${meta.border};background:${meta.bg}">
+      <div class="lc-head">
+        <div>
+          <div class="lc-type" style="color:${meta.color}">${meta.label}</div>
+          <div class="lc-tagline">${lu.tagline||meta.desc}</div>
+        </div>
+        <div>
+          <div class="lc-score-val" style="color:${meta.color}">${lu.ev_score??'—'}</div>
+          <div class="lc-score-lbl">EV Score</div>
+          <div class="lc-hit">${lu.hit_prob??'?'}% hit</div>
+        </div>
+      </div>
+      <div class="lc-picks">${picks.map((c,pi)=>`
+        <div class="lc-pick">
+          <span class="pick-num">${pi+1}.</span>
+          <span class="pick-text">${c.pred}</span>
+          <span class="pick-out" style="background:${c.outcome==='YES'?'rgba(52,211,153,.12)':'rgba(244,114,182,.12)'};color:${c.outcome==='YES'?'#34D399':'#F472B6'}">${c.outcome}</span>
+        </div>`).join('')}</div>
+      <div class="lc-foot">
+        <div class="lc-reason">${lu.reasoning||''}</div>
+        <button class="copy-btn" onclick="copyLineup(${li})">Kopiera</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function copyLineup(li){
+  const picks=(lineups[li].card_indices||[]).map(i=>cards[i]).filter(Boolean);
+  navigator.clipboard.writeText(picks.map((c,i)=>`${i+1}. ${c.pred} — ${c.outcome}`).join('\n')).then(()=>showToast('Kopierad! 📋','ok'));
+}
+
+// EDIT MODAL
+function openEdit(i){
+  editIdx=i; const c=cards[i];
+  document.getElementById('ePred').value=c.pred;
+  document.getElementById('eProb').value=c.prob;
+  document.getElementById('ePts').value=c.pts||'';
+  document.getElementById('eCtx').value=c.ctx||'';
+  editOutcome=c.outcome; updateOutcomeBtns();
+  document.getElementById('editModal').classList.add('open');
+}
+function setOutcome(v){editOutcome=v;updateOutcomeBtns();}
+function updateOutcomeBtns(){
+  const y=document.getElementById('outYes'),n=document.getElementById('outNo');
+  y.style.cssText=`border-color:${editOutcome==='YES'?'#34D399':'rgba(255,255,255,.1)'};background:${editOutcome==='YES'?'rgba(52,211,153,.1)':'transparent'};color:${editOutcome==='YES'?'#34D399':'#5A6278'}`;
+  n.style.cssText=`border-color:${editOutcome==='NO'?'#F472B6':'rgba(255,255,255,.1)'};background:${editOutcome==='NO'?'rgba(244,114,182,.1)':'transparent'};color:${editOutcome==='NO'?'#F472B6':'#5A6278'}`;
+}
+function saveEdit(){
+  cards[editIdx]={...cards[editIdx],pred:document.getElementById('ePred').value,prob:parseInt(document.getElementById('eProb').value)||60,pts:document.getElementById('ePts').value,ctx:document.getElementById('eCtx').value,outcome:editOutcome};
+  closeModal(); renderCards(); showToast('Kort uppdaterat ✓','ok');
+}
+function closeModal(){document.getElementById('editModal').classList.remove('open');}
+document.getElementById('editModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
+
+// RESET
+function resetAll(){
+  cards=[];lineups=[];imgB64=null;
+  ['page1','page2','page3'].forEach((id,i)=>document.getElementById(id).style.display=i===0?'block':'none');
+  document.getElementById('previewImg').style.display='none';
+  document.getElementById('fileInput').value='';
+  document.getElementById('uploadZone').classList.remove('has-img');
+  document.getElementById('uploadIcon').textContent='📸';
+  document.getElementById('uploadH').textContent='Ladda upp screenshot';
+  document.getElementById('scanBtn').disabled=true;
+  document.getElementById('genBtn').innerHTML='⚡ Generera AI Lineup-förslag';
+  document.getElementById('genBtn').disabled=false;
+  setStep(1); window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// TOAST
+function showToast(msg,type='inf'){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className=`toast ${type}`; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+</script>
+</body>
+</html>
