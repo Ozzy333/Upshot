@@ -304,7 +304,7 @@ async function scanImage(){
   btn.disabled=true; btn.innerHTML='<div class="spin"></div> Skannar bild med AI…';
   try{
     const raw=await callAPI([{role:'user',content:[
-      {type:'image',source:{type:'base64',media_type:'image/jpeg',data:imgB64}},
+      {type:'image',source:{type:'base64',media_type:'image/png',data:imgB64}},
       {type:'text',text:`Analyze this Upshot.cards app screenshot. Extract every visible prediction card.
 For each card: "pred" (full text), "outcome" ("YES" or "NO"), "prob" (integer 1-99 hit probability %), "pts" (points/prize or ""), "ctx" (one Swedish sentence reasoning), "confidence" ("high"|"med"|"low").
 Return ONLY valid JSON: {"cards":[...],"note":"Swedish summary"}
