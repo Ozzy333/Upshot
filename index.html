@@ -21,11 +21,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .shell{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:0 18px 80px}
 
 /* HEADER */
-header{display:flex;align-items:center;justify-content:space-between;padding:24px 0 32px}
-.logo-main{font-family:‘Barlow Condensed’,sans-serif;font-weight:900;font-size:22px;letter-spacing:3px;text-transform:uppercase}
-.logo-main span{color:var(–green)}
-.logo-sub{font-size:10px;color:var(–dim2);letter-spacing:3px;text-transform:uppercase;margin-top:2px}
-.status-pill{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(–green);background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);padding:5px 12px;border-radius:100px}
+header{display:flex;justify-content:center;padding:32px 0 28px}
+.header-center{display:flex;flex-direction:column;align-items:center;gap:6px}
+.logo-main{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:30px;letter-spacing:4px;text-transform:none}
+.logo-sub{font-size:11px;color:var(--dim2);letter-spacing:3px;text-transform:uppercase;margin-top:0}
+.status-pill{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--green);background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);padding:4px 10px;border-radius:100px;margin-top:4px}
 .dot{width:6px;height:6px;border-radius:50%;background:var(–green);animation:blink 2s ease-in-out infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 
@@ -144,11 +144,11 @@ header{display:flex;align-items:center;justify-content:space-between;padding:24p
 <div class="shell">
 
   <header>
-    <div>
-      <div class="logo-main">UPSHOT <span>OPT</span></div>
-      <div class="logo-sub">AI Lineup Optimizer</div>
+    <div class="header-center">
+      <div class="logo-main">Bozzy</div>
+      <div class="logo-sub">Upshot Optimizer</div>
+      <div class="status-pill"><div class="dot"></div> AI Ready</div>
     </div>
-    <div class="status-pill"><div class="dot"></div> AI Ready</div>
   </header>
 
   <div class="steps">
